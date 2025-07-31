@@ -56,14 +56,14 @@ apply_lateral_move:
     /* === GESTION DE LA VITESSE === */
     
     /* Calcul de l'accélération basée sur la différence de vitesse cible */
-    move.w d5, a1           /* a1 = maxSpeed comme vitesse cible */
-    sub.w d4, a1            /* a1 = maxSpeed - currentSpeed */
+    move.w d5, d1           /* d1 = maxSpeed comme vitesse cible */
+    sub.w d4, d1            /* d1 = maxSpeed - currentSpeed */
     
     /* Application de l'accélération */
-    muls.w d6, a1           /* a1 = speedDiff * acceleration */
-    asr.l #ACCELERATION_DAMPING, a1  /* Damping de l'accélération */
+    muls.w d6, d1           /* d1 = speedDiff * acceleration */
+    asr.l #ACCELERATION_DAMPING, d1  /* Damping de l'accélération */
     
-    add.w a1, d4            /* Nouvelle vitesse */
+    add.w d1, d4            /* Nouvelle vitesse */
     
     /* === EFFETS DE LA COURBURE === */
     
@@ -89,11 +89,11 @@ curve_positive:
     
 check_max_speed:
     /* Vitesse maximale + tolérance pour dépassements temporaires */
-    move.w d5, a1
-    add.w #20, a1           /* maxSpeed + 20 */
-    cmp.w a1, d4
+    move.w d5, d1
+    add.w #20, d1           /* maxSpeed + 20 */
+    cmp.w d1, d4
     ble.s speed_ok
-    move.w a1, d4
+    move.w d1, d4
     
 speed_ok:
     

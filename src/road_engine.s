@@ -38,9 +38,9 @@ render_loop:
     
     /* Vérification si on est dans la zone visible */
     cmp.w #224, d1
-    bge.s next_strip
+    bge next_strip
     cmp.w #80, d1               /* Horizon Y */
-    blt.s next_strip
+    blt next_strip
     
     /* Calcul de la position centrale de la route */
     move.w #160, d5             /* Centre écran */
@@ -51,13 +51,13 @@ render_loop:
     sub.w d2, d6                /* Bord gauche */
     asr.w #1, d6                /* /2 car roadWidth est le diamètre */
     
-    move.w d5, a1
-    add.w d2, a1                /* Bord droit */
-    asr.w #1, a1                /* /2 */
+    move.w d5, d7
+    add.w d2, d7                /* Bord droit */
+    asr.w #1, d7                /* /2 */
     
     /* Conversion en coordonnées tuiles */
     asr.w #4, d6                /* /16 pour tuiles */
-    move.w a1, d0
+    move.w d7, d0
     asr.w #4, d0                /* /16 pour tuiles */
     
     /* Limitation aux bords de l'écran */
@@ -75,9 +75,9 @@ draw_scanline:
     asr.w #3, d5                /* /8 pour tuiles */
     
     /* Dessiner l'herbe à gauche */
-    moveq #0, a2                /* X = 0 */
+    moveq #0, d2                /* X = 0 */
 grass_left_loop:
-    cmp.w d6, a2
+    cmp.w d6, d2
     bge.s draw_road_section
     
     /* Calcul adresse VRAM pour PLAN_A */
@@ -166,13 +166,13 @@ clearPlanA:
 clear_line_loop:
     move.w #39, d2              /* 40 tuiles par ligne */
     subq.w #1, d2               /* Pour dbra */
-    moveq #0, a0                /* X début */
+    moveq #0, d0                /* X début */
     
 clear_tile_loop:
     /* Calcul adresse VRAM */
     move.w d1, d3               /* Y */
     lsl.w #6, d3                /* * 64 */
-    add.w a0, d3                /* + X */
+    add.w d0, d3                /* + X */
     lsl.w #1, d3                /* * 2 */
     add.w #PLAN_A_BASE, d3
     

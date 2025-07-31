@@ -45,6 +45,11 @@ static const AISpawnPoint* currentSpawns = citySpawns;
 static u16 lastSpawnCheck = 0;
 static u16 frameCounter = 0;
 static u8 difficultyLevel = 1;  // 1-5, influence le comportement IA
+u8 activeRiders = 0;         // Nombre de riders actifs
+AIRider aiRiders[MAX_AI_RIDERS];  // Array des riders IA
+s32 trackPosition = 0;       // Position sur la piste
+s16 playerX = 160;           // Position X du joueur
+s16 playerSpeed = 0;         // Vitesse du joueur
 
 // Statistiques de performance (debug)
 typedef struct {
@@ -246,7 +251,7 @@ void handleCloseInteraction(AIRider* rider) {
 
 void triggerCollisionEffects(s16 x, s16 y) {
     // Effet visuel simple - flash de l'écran
-    VDP_setPaletteColor(0, 0x0EEE); // Flash blanc
+    PAL_setColor(0, 0x0EEE); // Flash blanc
     
     // Note: Ici tu peux ajouter:
     // - Particules de crash

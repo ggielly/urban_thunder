@@ -9,6 +9,7 @@ IMAGE sky_tiles "res/sky_simple.png"
 
 # Sprites pour le joueur et les objets
 # SPRITE sprite_player "res/player_bike_sprite_(32x32).png" 2 2 FAST 5
+SPRITE sprite_ai_bike "res/road_simple.png" 2 2 FAST 0
 
 # Palettes
 PALETTE simple_palette "res/simple_palette.png"
