@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Road Rash Tiles Generator</title>
+    <style>
+        body {
+            font-family: 'Courier New', monospace;
+            background: #1a1a1a;
+            color: #00ff00;
+            padding: 20px;
+        }
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .tile-preview {
+            border: 2px solid #333;
+            margin: 10px;
+            display: inline-block;
+            background: #000;
+        }
+        .controls {
+            background: #333;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: #006600;
+            color: white;
+            border: none;
+            padding: 10px 15px;
+            margin: 5px;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        button:hover {
+            background: #008800;
+        }
+        .palette {
+            display: flex;
+            gap: 5px;
+            align-items: center;
+            margin: 10px 0;
+        }
+        .color-box {
+            width: 30px;
+            height: 30px;
+            border: 2px solid #666;
+            cursor: pointer;
+        }
+        h1, h2 {
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+        .download-section {
+            background: #2a2a2a;
+            padding: 15px;
+            border-radius: 5px;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🏍️ ROAD RASH TILES GENERATOR</h1>
+        <p>Générateur de tiles 16x16 pour SEGA Mega Drive - Compatible SGDK</p>
+        
+        <div class="controls">
+            <h2>Palette Mega Drive (16 couleurs max)</h2>
+            <div class="palette" id="palette">
+                <!-- Palette générée en JS -->
+            </div>
+            
+            <h2>Génération des Tiles</h2>
+            <button onclick="generateRoadTile()">Générer Route</button>
+            <button onclick="generateGrassTile()">Générer Herbe</button>
+            <button onclick="generateSkyTile()">Générer Ciel</button>
+            <button onclick="generatePlayerSprite()">Générer Moto Joueur</button>
+            <button onclick="generateAllTilesAndSave()">Tout générer et sauvegarder</button>
+        </div>
+        
+        <div id="preview-area">
+            <h2>Aperçu des Tiles (16x16 pixels)</h2>
+        </div>
+        
+        <div class="download-section">
+            <h2>Téléchargement</h2>
+            <p>Clic droit → "Enregistrer l'image sous..." sur chaque tile</p>
+            <p>Noms de fichiers recommandés :</p>
+            <ul>
+                <li>road_tiles.png</li>
+                <li>grass_tiles.png</li>
+                <li>sky_tiles.png</li>
+                <li>player_bike.png</li>
+            </ul>
+        </div>
+    </div>
+
+    <script>
+        // Palette Mega Drive réaliste (limitée à 16 couleurs)
+        const megaDrivePalette = [
+            '#000000', '#222222', '#444444', '#666666', // Gris
+            '#888888', '#AAAAAA', '#CCCCCC', '#FFFFFF', // Gris clairs
+            '#FF0000', '#00FF00', '#0000FF', '#FFFF00', // Primaires
+            '#FF00FF', '#00FFFF', '#FF8800', '#88FF88'  // Secondaires
+        ];
+        
+        let currentPalette = [...megaDrivePalette];
+        
+        function initPalette() {
+            const paletteDiv = document.getElementById('palette');
+            currentPalette.forEach((color, index) => {
+                const colorBox = document.createElement('div');
+                colorBox.className = 'color-box';
+                colorBox.style.backgroundColor = color;
+                colorBox.title = `Couleur ${index}: ${color}`;
+                paletteDiv.appendChild(colorBox);
+            });
+        }
+        
+        function createCanvas(width, height, name) {
+            const canvas = document.createElement('canvas');
+            canvas.width = width;
+            canvas.height = height;
+            canvas.style.border = '2px solid #00ff00';
+            canvas.style.margin = '10px';
+            canvas.style.imageRendering = 'pixelated';
+            canvas.style.width = (width * 8) + 'px';
+            canvas.style.height = (height * 8) + 'px';
+            canvas.title = name;
+            return canvas;
+        }
+        
+        function generateRoadTile() {
+            // Format SGDK RGB : 128x32px minimum avec palette en première ligne
+            const tileWidth = 16;
+            const tileHeight = 16;
+            const fullWidth = 128;
+            const fullHeight = 32;
+            const canvas = createCanvas(fullWidth, fullHeight, 'road_tiles.png');
+            const ctx = canvas.getContext('2d');
+
+            // Palette spécifique pour la route (16 couleurs max)
+            const roadPalette = [
+                '#000000', // 0 - Noir (transparent)
+                '#222222', // 1 - Gris très sombre
+                '#444444', // 2 - Gris sombre 
+                '#666666', // 3 - Gris moyen
+                '#888888', // 4 - Gris clair
+                '#AAAAAA', // 5 - Gris très clair
+                '#FFFFFF', // 6 - Blanc
+                '#FFFF00', // 7 - Jaune (ligne centrale)
+                '#00AA00', // 8 - Vert foncé
+                '#00FF00', // 9 - Vert
+                '#88FF88', // 10 - Vert clair
+                '#0088FF', // 11 - Bleu
+                '#FF0000', // 12 - Rouge
+                '#FF8800', // 13 - Orange
+                '#CCCCCC', // 14 - Gris très clair
+                '#DDDDDD'  // 15 - Gris blanc
+            ];
+
+            // 1. Palette dans les 16 premiers pixels de la première ligne
+            for (let i = 0; i < 16; i++) {
+                ctx.fillStyle = roadPalette[i];
+                ctx.fillRect(i, 0, 1, 1);
+            }
+            // 2. Le reste de la première ligne = couleur 0
+            ctx.fillStyle = roadPalette[0];
+            ctx.fillRect(16, 0, fullWidth - 16, 1);
+
+            // 3. Le tile [0,0] (16x16 en haut à gauche) doit être entièrement couleur 0
+            ctx.fillStyle = roadPalette[0];
+            ctx.fillRect(0, 1, tileWidth, tileHeight - 1); // de (0,1) à (15,15)
+
+            // 4. Générer le motif de route dans un tile 16x16
+            const tileCanvas = document.createElement('canvas');
+            tileCanvas.width = tileWidth;
+            tileCanvas.height = tileHeight;
+            const tileCtx = tileCanvas.getContext('2d');
+            // Fond gris asphalte (couleur 3)
+            tileCtx.fillStyle = roadPalette[3];
+            tileCtx.fillRect(0, 0, tileWidth, tileHeight);
+            // Ligne centrale jaune (couleur 7)
+            tileCtx.fillStyle = roadPalette[7];
+            tileCtx.fillRect(7, 0, 2, tileHeight);
+            // Texture asphalte (couleur 2)
+            tileCtx.fillStyle = roadPalette[2];
+            for (let i = 0; i < 8; i++) {
+                const x = Math.floor(Math.random() * tileWidth);
+                const y = Math.floor(Math.random() * tileHeight);
+                if (x < 7 || x > 8) {
+                    tileCtx.fillRect(x, y, 1, 1);
+                }
+            }
+
+            // 5. Répéter le motif à partir de x=16 (2e tile horizontalement)
+            for (let y = 0; y < fullHeight; y += tileHeight) {
+                for (let x = tileWidth; x < fullWidth; x += tileWidth) {
+                    // Si on est sur la première ligne, ne pas écraser la palette ni le tile uni
+                    if (y === 0) {
+                        ctx.drawImage(tileCanvas, 0, 1, tileWidth, tileHeight - 1, x, 1, tileWidth, tileHeight - 1);
+                    } else {
+                        ctx.drawImage(tileCanvas, 0, 0, tileWidth, tileHeight, x, y, tileWidth, tileHeight);
+                    }
+                }
+            }
+
+            addToPreview(canvas, 'Road Tile (SGDK RGB Format)');
+        }
+        
+        function generateGrassTile() {
+            // Format SGDK RGB : 128x32px minimum avec palette en première ligne
+            const tileWidth = 16;
+            const tileHeight = 16;
+            const fullWidth = 128;
+            const fullHeight = 32;
+            const canvas = createCanvas(fullWidth, fullHeight, 'grass_tiles.png');
+            const ctx = canvas.getContext('2d');
+
+            // Palette pour l'herbe
+            const grassPalette = [
+                '#000000', // 0 - Noir (transparent)
+                '#004400', // 1 - Vert très sombre
+                '#006600', // 2 - Vert sombre
+                '#008800', // 3 - Vert moyen-sombre
+                '#00AA00', // 4 - Vert moyen
+                '#00CC00', // 5 - Vert
+                '#00FF00', // 6 - Vert vif
+                '#44FF44', // 7 - Vert clair
+                '#88FF88', // 8 - Vert très clair
+                '#AAFFAA', // 9 - Vert pastel
+                '#CCFFCC', // 10 - Vert très pastel
+                '#FFFFFF', // 11 - Blanc
+                '#FFFF00', // 12 - Jaune
+                '#DDDD00', // 13 - Jaune sombre
+                '#BBBB00', // 14 - Jaune olive
+                '#999900'  // 15 - Olive
+            ];
+
+            // Dessiner la palette dans la première ligne
+            for (let i = 0; i < 16; i++) {
+                ctx.fillStyle = grassPalette[i];
+                ctx.fillRect(i, 0, 1, 1);
+            }
+            
+            // Remplir le reste de la première ligne avec la couleur 0
+            ctx.fillStyle = grassPalette[0];
+            ctx.fillRect(16, 0, fullWidth - 16, 1);
+
+            // Générer le motif d'herbe
+            const tileCanvas = document.createElement('canvas');
+            tileCanvas.width = tileWidth;
+            tileCanvas.height = tileHeight;
+            const tileCtx = tileCanvas.getContext('2d');
+            
+            // Fond vert foncé
+            tileCtx.fillStyle = grassPalette[4];
+            tileCtx.fillRect(0, 0, tileWidth, tileHeight);
+            
+            // Pixels d'herbe plus claire
+            tileCtx.fillStyle = grassPalette[7];
+            for (let i = 0; i < 12; i++) {
+                const x = Math.floor(Math.random() * tileWidth);
+                const y = Math.floor(Math.random() * tileHeight);
+                tileCtx.fillRect(x, y, 1, 1);
+            }
+            
+            // Quelques brins d'herbe
+            tileCtx.fillStyle = grassPalette[6];
+            for (let x = 2; x < tileWidth; x += 4) {
+                for (let y = 1; y < tileHeight - 1; y += 3) {
+                    tileCtx.fillRect(x, y, 1, 2);
+                }
+            }
+
+            // Répéter le motif à partir de la ligne 1
+            for (let y = 1; y < fullHeight; y += tileHeight) {
+                for (let x = 0; x < fullWidth; x += tileWidth) {
+                    const drawY = y === 1 ? 1 : y;
+                    const clipHeight = (y === 1) ? tileHeight - 1 : tileHeight;
+                    
+                    if (drawY + clipHeight <= fullHeight) {
+                        ctx.drawImage(tileCanvas, 0, y === 1 ? 1 : 0, tileWidth, clipHeight, x, drawY, tileWidth, clipHeight);
+                    }
+                }
+            }
+            
+            addToPreview(canvas, 'Grass Tile (SGDK RGB Format)');
+        }
+        
+        function generateSkyTile() {
+            // Format SGDK RGB : 128x32px minimum avec palette en première ligne
+            const tileWidth = 16;
+            const tileHeight = 16;
+            const fullWidth = 128;
+            const fullHeight = 32;
+            const canvas = createCanvas(fullWidth, fullHeight, 'sky_tiles.png');
+            const ctx = canvas.getContext('2d');
+
+            // Palette pour le ciel
+            const skyPalette = [
+                '#000000', // 0 - Noir (transparent)
+                '#001144', // 1 - Bleu très sombre
+                '#002266', // 2 - Bleu sombre
+                '#003388', // 3 - Bleu moyen-sombre
+                '#0044AA', // 4 - Bleu moyen
+                '#0055CC', // 5 - Bleu
+                '#0066FF', // 6 - Bleu vif
+                '#3388FF', // 7 - Bleu clair
+                '#66AAFF', // 8 - Bleu très clair
+                '#99CCFF', // 9 - Bleu pastel
+                '#CCDDFF', // 10 - Bleu très pastel
+                '#FFFFFF', // 11 - Blanc (nuages)
+                '#EEEEEE', // 12 - Gris très clair
+                '#DDDDDD', // 13 - Gris clair
+                '#CCCCCC', // 14 - Gris
+                '#BBBBBB'  // 15 - Gris moyen
+            ];
+
+            // Dessiner la palette dans la première ligne
+            for (let i = 0; i < 16; i++) {
+                ctx.fillStyle = skyPalette[i];
+                ctx.fillRect(i, 0, 1, 1);
+            }
+            
+            // Remplir le reste de la première ligne avec la couleur 0
+            ctx.fillStyle = skyPalette[0];
+            ctx.fillRect(16, 0, fullWidth - 16, 1);
+
+            // Générer le motif de ciel
+            const tileCanvas = document.createElement('canvas');
+            tileCanvas.width = tileWidth;
+            tileCanvas.height = tileHeight;
+            const tileCtx = tileCanvas.getContext('2d');
+            
+            // Dégradé de ciel bleu
+            for (let y = 0; y < tileHeight; y++) {
+                const intensity = Math.floor((y / tileHeight) * 4) + 4; // Bleu clair à plus foncé
+                tileCtx.fillStyle = skyPalette[Math.min(intensity, 9)];
+                tileCtx.fillRect(0, y, tileWidth, 1);
+            }
+            
+            // Quelques pixels de nuages blancs
+            tileCtx.fillStyle = skyPalette[11]; // Blanc
+            for (let i = 0; i < 6; i++) {
+                const x = Math.floor(Math.random() * tileWidth);
+                const y = Math.floor(Math.random() * 8); // Nuages en haut
+                tileCtx.fillRect(x, y, 2, 1);
+            }
+
+            // Répéter le motif à partir de la ligne 1
+            for (let y = 1; y < fullHeight; y += tileHeight) {
+                for (let x = 0; x < fullWidth; x += tileWidth) {
+                    const drawY = y === 1 ? 1 : y;
+                    const clipHeight = (y === 1) ? tileHeight - 1 : tileHeight;
+                    
+                    if (drawY + clipHeight <= fullHeight) {
+                        ctx.drawImage(tileCanvas, 0, y === 1 ? 1 : 0, tileWidth, clipHeight, x, drawY, tileWidth, clipHeight);
+                    }
+                }
+            }
+            
+            addToPreview(canvas, 'Sky Tile (SGDK RGB Format)');
+        }
+        
+        function generatePlayerSprite() {
+            const canvas = createCanvas(32, 32, 'player_bike.png');
+            const ctx = canvas.getContext('2d');
+            
+            // Fond transparent
+            ctx.fillStyle = currentPalette[0]; // Noir (transparent)
+            ctx.fillRect(0, 0, 32, 32);
+            
+            // Corps de la moto (forme simplifiée)
+            ctx.fillStyle = currentPalette[8]; // Rouge
+            ctx.fillRect(12, 20, 8, 6); // Corps principal
+            
+            // Roues
+            ctx.fillStyle = currentPalette[1]; // Gris sombre
+            ctx.fillRect(8, 24, 4, 4);  // Roue arrière
+            ctx.fillRect(20, 24, 4, 4); // Roue avant
+            
+            // Pilote
+            ctx.fillStyle = currentPalette[10]; // Bleu
+            ctx.fillRect(14, 16, 4, 6); // Torse
+            
+            // Casque
+            ctx.fillStyle = currentPalette[7]; // Blanc
+            ctx.fillRect(14, 12, 4, 4); // Casque
+            
+            // Guidon
+            ctx.fillStyle = currentPalette[4]; // Gris
+            ctx.fillRect(10, 18, 12, 2);
+            
+            addToPreview(canvas, 'Player Bike Sprite (32x32)');
+        }
+        
+        function addToPreview(canvas, name) {
+            const previewArea = document.getElementById('preview-area');
+            
+            const container = document.createElement('div');
+            container.className = 'tile-preview';
+            
+            const title = document.createElement('h3');
+            title.textContent = name;
+            title.style.color = '#00ffff';
+            title.style.margin = '5px';
+            
+            container.appendChild(title);
+            container.appendChild(canvas);
+            
+            // Bouton de téléchargement
+            const downloadBtn = document.createElement('button');
+            downloadBtn.textContent = 'Télécharger PNG';
+            downloadBtn.onclick = () => downloadCanvas(canvas, name);
+            container.appendChild(downloadBtn);
+            
+            previewArea.appendChild(container);
+        }
+        
+        function downloadCanvas(canvas, filename) {
+            const link = document.createElement('a');
+            link.download = filename.toLowerCase().replace(/\s+/g, '_') + '.png';
+            link.href = canvas.toDataURL();
+            link.click();
+        }
+        
+        // Génère et sauvegarde tous les tiles automatiquement dans ../res/
+        function generateAllTilesAndSave() {
+            // Générer Road
+            const roadCanvas = createCanvas(128, 32, 'road_tiles.png');
+            const ctxRoad = roadCanvas.getContext('2d');
+            // Palette route (identique à generateRoadTile)
+            const roadPalette = [
+                '#000000','#222222','#444444','#666666','#888888','#AAAAAA','#FFFFFF','#FFFF00',
+                '#00AA00','#00FF00','#88FF88','#0088FF','#FF0000','#FF8800','#CCCCCC','#DDDDDD'
+            ];
+            for (let i = 0; i < 16; i++) ctxRoad.fillStyle = roadPalette[i], ctxRoad.fillRect(i,0,1,1);
+            ctxRoad.fillStyle = roadPalette[0]; ctxRoad.fillRect(16,0,112,1);
+            ctxRoad.fillStyle = roadPalette[0]; ctxRoad.fillRect(0,1,16,15);
+            const tileRoad = document.createElement('canvas'); tileRoad.width=16; tileRoad.height=16;
+            const tctxR = tileRoad.getContext('2d');
+            tctxR.fillStyle=roadPalette[3]; tctxR.fillRect(0,0,16,16);
+            tctxR.fillStyle=roadPalette[7]; tctxR.fillRect(7,0,2,16);
+            tctxR.fillStyle=roadPalette[2]; for(let i=0;i<8;i++){let x=Math.floor(Math.random()*16),y=Math.floor(Math.random()*16);if(x<7||x>8)tctxR.fillRect(x,y,1,1);}
+            for(let y=0;y<32;y+=16)for(let x=16;x<128;x+=16)if(y===0){ctxRoad.drawImage(tileRoad,0,1,16,15,x,1,16,15);}else{ctxRoad.drawImage(tileRoad,0,0,16,16,x,y,16,16);}
+            saveCanvasToRes(roadCanvas,'road_tiles.png');
+
+            // Générer Grass
+            const grassCanvas = createCanvas(128,32,'grass_tiles.png');
+            const ctxGrass = grassCanvas.getContext('2d');
+            const grassPalette = [
+                '#000000','#004400','#006600','#008800','#00AA00','#00CC00','#00FF00','#44FF44',
+                '#88FF88','#AAFFAA','#CCFFCC','#FFFFFF','#FFFF00','#DDDD00','#BBBB00','#999900'
+            ];
+            for(let i=0;i<16;i++)ctxGrass.fillStyle=grassPalette[i],ctxGrass.fillRect(i,0,1,1);
+            ctxGrass.fillStyle=grassPalette[0];ctxGrass.fillRect(16,0,112,1);
+            ctxGrass.fillStyle=grassPalette[0];ctxGrass.fillRect(0,1,16,15);
+            const tileGrass=document.createElement('canvas');tileGrass.width=16;tileGrass.height=16;
+            const tctxG=tileGrass.getContext('2d');
+            tctxG.fillStyle=grassPalette[4];tctxG.fillRect(0,0,16,16);
+            tctxG.fillStyle=grassPalette[7];for(let i=0;i<12;i++){let x=Math.floor(Math.random()*16),y=Math.floor(Math.random()*16);tctxG.fillRect(x,y,1,1);}
+            tctxG.fillStyle=grassPalette[6];for(let x=2;x<16;x+=4)for(let y=1;y<15;y+=3)tctxG.fillRect(x,y,1,2);
+            for(let y=0;y<32;y+=16)for(let x=16;x<128;x+=16)if(y===0){ctxGrass.drawImage(tileGrass,0,1,16,15,x,1,16,15);}else{ctxGrass.drawImage(tileGrass,0,0,16,16,x,y,16,16);}
+            saveCanvasToRes(grassCanvas,'grass_tiles.png');
+
+            // Générer Sky
+            const skyCanvas = createCanvas(128,32,'sky_tiles.png');
+            const ctxSky = skyCanvas.getContext('2d');
+            const skyPalette = [
+                '#000000','#001144','#002266','#003388','#0044AA','#0055CC','#0066FF','#3388FF',
+                '#66AAFF','#99CCFF','#CCDDFF','#FFFFFF','#EEEEEE','#DDDDDD','#CCCCCC','#BBBBBB'
+            ];
+            for(let i=0;i<16;i++)ctxSky.fillStyle=skyPalette[i],ctxSky.fillRect(i,0,1,1);
+            ctxSky.fillStyle=skyPalette[0];ctxSky.fillRect(16,0,112,1);
+            ctxSky.fillStyle=skyPalette[0];ctxSky.fillRect(0,1,16,15);
+            const tileSky=document.createElement('canvas');tileSky.width=16;tileSky.height=16;
+            const tctxS=tileSky.getContext('2d');
+            for(let y=0;y<16;y++){let intensity=Math.floor((y/16)*4)+4;tctxS.fillStyle=skyPalette[Math.min(intensity,9)];tctxS.fillRect(0,y,16,1);}
+            tctxS.fillStyle=skyPalette[11];for(let i=0;i<6;i++){let x=Math.floor(Math.random()*16),y=Math.floor(Math.random()*8);tctxS.fillRect(x,y,2,1);}
+            for(let y=0;y<32;y+=16)for(let x=16;x<128;x+=16)if(y===0){ctxSky.drawImage(tileSky,0,1,16,15,x,1,16,15);}else{ctxSky.drawImage(tileSky,0,0,16,16,x,y,16,16);}
+            saveCanvasToRes(skyCanvas,'sky_tiles.png');
+            
+            // Afficher un message de confirmation
+            alert('Tous les tiles ont été générés et téléchargés !');
+        }
+
+        // Sauvegarde un canvas dans ../res/ (nécessite File System Access API ou propose le téléchargement si non supporté)
+        function saveCanvasToRes(canvas, filename) {
+            if ('showSaveFilePicker' in window) {
+                // API moderne (Chrome/Edge)
+                window.showSaveFilePicker({
+                    suggestedName: '../res/' + filename,
+                    types: [{description: 'PNG', accept: {'image/png': ['.png']}}]
+                }).then(fileHandle => fileHandle.createWritable()).then(writable => {
+                    canvas.toBlob(blob => {writable.write(blob).then(()=>writable.close());}, 'image/png');
+                });
+            } else {
+                // Fallback : téléchargement classique
+                const link = document.createElement('a');
+                link.download = filename;
+                link.href = canvas.toDataURL();
+                link.click();
+            }
+        }
+        
+        // Génération automatique des palettes de couleurs
+        function generatePalettes() {
+            // Palette route (PAL0)
+            const roadCanvas = createCanvas(16, 1, 'road_palette.png');
+            const roadCtx = roadCanvas.getContext('2d');
+            
+            const roadColors = [
+                '#000000', '#333333', '#666666', '#999999', // Gris asphalte
+                '#00AA00', '#00FF00', '#88FF88', '#AAFFAA', // Verts herbe  
+                '#0088FF', '#00AAFF', '#88CCFF', '#AADDFF', // Bleus ciel
+                '#FFFF00', '#FFAA00', '#FF6600', '#FFFFFF'  // Jaune/orange/blanc
+            ];
+            
+            roadColors.forEach((color, i) => {
+                roadCtx.fillStyle = color;
+                roadCtx.fillRect(i, 0, 1, 1);
+            });
+            
+            addToPreview(roadCanvas, 'Road Palette');
+            
+            // Palette sprites (PAL1)
+            const spriteCanvas = createCanvas(16, 1, 'sprites_palette.png');
+            const spriteCtx = spriteCanvas.getContext('2d');
+            
+            const spriteColors = [
+                '#000000', '#FF0000', '#00FF00', '#0000FF', // Noir, RGB primaires
+                '#FFFF00', '#FF00FF', '#00FFFF', '#FFFFFF', // Couleurs vives
+                '#880000', '#008800', '#000088', '#888800', // Couleurs sombres
+                '#880088', '#008888', '#FF8800', '#CCCCCC'  // Couleurs moyennes
+            ];
+            
+            spriteColors.forEach((color, i) => {
+                spriteCtx.fillStyle = color;
+                spriteCtx.fillRect(i, 0, 1, 1);
+            });
+            
+            addToPreview(spriteCanvas, 'Sprites Palette');
+        }
+        
+        // Initialisation
+        window.onload = function() {
+            initPalette();
+            
+            // Génération automatique des ressources de base
+            setTimeout(() => {
+                generateRoadTile();
+                generateGrassTile(); 
+                generateSkyTile();
+                generatePlayerSprite();
+                generatePalettes();
+            }, 500);
+        };
+    </script>
+</body>
+</html>

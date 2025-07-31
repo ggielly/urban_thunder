@@ -1,0 +1,52 @@
+{
+    "files.associations": {
+        "*.s": "arm",
+        "*.asm": "arm", 
+        "*.res": "properties",
+        "*.gen": "binary",
+        "*.bin": "binary"
+    },
+    "C_Cpp.default.defines": [
+        "SGDK",
+        "MEGADRIVE",
+        "__M68K__"
+    ],
+    "C_Cpp.default.includePath": [
+        "${env:SGDK}/inc",
+        "${workspaceFolder}/res",
+        "${workspaceFolder}/src"
+    ],
+    "C_Cpp.default.compilerPath": "${env:SGDK}/bin/gcc",
+    "C_Cpp.default.cStandard": "c99",
+    "C_Cpp.default.intelliSenseMode": "gcc-x64",
+    
+    "editor.insertSpaces": true,
+    "editor.tabSize": 4,
+    "editor.rulers": [80, 120],
+    
+    "files.exclude": {
+        "**/obj/": true,
+        "**/*.elf": true,
+        "**/resources.h": false
+    },
+    
+    "terminal.integrated.env.windows": {
+        "SGDK": "C:/sgdk"
+    },
+    "terminal.integrated.env.linux": {
+        "SGDK": "${env:HOME}/sgdk"
+    },
+    "terminal.integrated.env.osx": {
+        "SGDK": "${env:HOME}/sgdk"  
+    },
+    
+    "emmet.includeLanguages": {
+        "c": "html"
+    },
+    
+    "workbench.colorCustomizations": {
+        "statusBar.background": "#005500",
+        "statusBar.foreground": "#ffffff",
+        "titleBar.activeBackground": "#003300"
+    }
+}
