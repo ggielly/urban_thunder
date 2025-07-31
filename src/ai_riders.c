@@ -1,61 +1,8 @@
 #include <genesis.h>
 #include "resources.h"
-
-// Types d'IA disponibles
-typedef enum {
-    AI_AGGRESSIVE = 0,    // Fonce droit, peu d'évitement
-    AI_DEFENSIVE,         // Évite les collisions, prudent
-    AI_ERRATIC,          // Comportement imprévisible
-    AI_RUBBER_BAND,      // Ajuste sa vitesse selon le joueur
-    AI_BLOCKER          // Essaie de bloquer le joueur
-} AIType;
-
-// États de l'IA
-typedef enum {
-    AI_STATE_RACING = 0,     // Course normale
-    AI_STATE_ATTACKING,      // Attaque le joueur
-    AI_STATE_AVOIDING,       // Évite un obstacle
-    AI_STATE_CRASHED,        // En train de tomber/récupérer
-    AI_STATE_CATCHING_UP     // Rattrapage rubber band
-} AIState;
-
-// Structure d'un concurrent IA
-typedef struct {
-    // Position et physique
-    s16 x, y;                // Position écran
-    s32 worldX, worldZ;      // Position monde (précision fixe 16.16)
-    s16 speed;               // Vitesse actuelle
-    s16 maxSpeed;            // Vitesse max de ce rider
-    s16 acceleration;        // Accélération
-    s16 handling;            // Maniabilité (0-255)
-    
-    // IA et comportement
-    AIType aiType;           // Type d'IA
-    AIState state;           // État actuel
-    u16 stateTimer;          // Timer pour l'état courant
-    s16 targetX;             // Position X cible
-    s16 decisionTimer;       // Timer pour prendre des décisions
-    
-    // Rubber band et difficulté adaptative
-    s16 rubberBandStrength;  // Force du rubber band (0-255)
-    s16 playerDistance;      // Distance au joueur
-    u16 aggressionLevel;     // Niveau d'agressivité (0-255)
-    
-    // Animation et rendu
-    u8 spriteIndex;          // Index du sprite assigné
-    u8 animFrame;            // Frame d'animation courante
-    u8 animTimer;            // Timer d'animation
-    bool visible;            // Visible à l'écran
-    bool active;             // Actif dans la simulation
-    
-    // Combat et interactions
-    u16 attackTimer;         // Cooldown des attaques
-    s16 health;              // Points de vie (crashes)
-    bool canAttack;          // Peut attaquer ce frame
-} AIRider;
+#include "ai_riders.h"
 
 // Configuration globale IA
-#define MAX_AI_RIDERS 8
 #define AI_DECISION_INTERVAL 30    // Frames entre décisions
 #define AI_SIGHT_DISTANCE 200      // Distance de "vue" de l'IA
 #define AI_ATTACK_RANGE 32         // Portée d'attaque
@@ -64,8 +11,6 @@ typedef struct {
 // Variables globales
 AIRider aiRiders[MAX_AI_RIDERS];
 u8 activeRiders = 0;
-extern s16 playerX, playerSpeed;
-extern u32 trackPosition;
 
 // Tables de personnalité pré-calculées
 const s16 aiPersonalities[5][6] = {
@@ -76,11 +21,6 @@ const s16 aiPersonalities[5][6] = {
     { 210, 3, 200, 180, 100, 150 },  // RUBBER_BAND
     { 180, 2, 160, 60,  250, 60 }    // BLOCKER
 };
-
-// Prototypes des fonctions assembleur optimisées
-extern void updateAIPhysicsASM(AIRider* rider, s16 targetX, s16 roadCurve);
-extern bool checkCollisionASM(s16 x1, s16 y1, s16 x2, s16 y2, s16 threshold);
-extern void sortRidersByDistance(AIRider* riders, u8 count);
 
 // === INITIALISATION ET GESTION ===
 
@@ -240,7 +180,7 @@ void updateRacingAI(AIRider* rider) {
             rider->targetX = playerX + ((random() % 20) - 10);
             
             // Ralentit si devant le joueur
-            if (rider->worldZ > (trackPosition << 16)) {
+            if (rider->worldZ > (s32)(trackPosition << 16)) {
                 rider->speed = min(rider->speed, playerSpeed + 1);
             }
             break;
@@ -528,12 +468,10 @@ void renderAIRiders(void) {
         
         // Projection pseudo-3D
         if (relativeZ > 0) {
-            // Derrière le joueur
-            u16 scale = 128; // Plus petit
+            // Derrière le joueur - plus petit
             rider->y = 200;
         } else {
-            // Devant le joueur  
-            u16 scale = 256; // Taille normale
+            // Devant le joueur - taille normale
             rider->y = 120 + ((-relativeZ) >> 18); // Plus haut si plus loin
         }
         

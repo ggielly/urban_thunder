@@ -51,4 +51,5 @@ out/src/ai_integration.o: src/ai_integration.c \
  /opt/toolchains/mars/m68k-elf/inc/config.h \
  /opt/toolchains/mars/m68k-elf/inc/string.h \
  /opt/toolchains/mars/m68k-elf/inc/maths.h \
- /opt/toolchains/mars/m68k-elf/inc/dma.h inc/resources.h inc/ai_riders.h
+ /opt/toolchains/mars/m68k-elf/inc/dma.h inc/resources.h inc/ai_riders.h \
+ inc/ai_integration.h inc/ai_riders.h

@@ -1,5 +1,4 @@
-out/src/ai_riders.o: src/ai_riders.c \
- /opt/toolchains/mars/m68k-elf/inc/genesis.h \
+out/src/main.o: src/main.c /opt/toolchains/mars/m68k-elf/inc/genesis.h \
  /opt/toolchains/mars/m68k-elf/inc/types.h \
  /opt/toolchains/mars/m68k-elf/inc/config.h \
  /opt/toolchains/mars/m68k-elf/inc/asm.h \
@@ -51,4 +50,5 @@ out/src/ai_riders.o: src/ai_riders.c \
  /opt/toolchains/mars/m68k-elf/inc/config.h \
  /opt/toolchains/mars/m68k-elf/inc/string.h \
  /opt/toolchains/mars/m68k-elf/inc/maths.h \
- /opt/toolchains/mars/m68k-elf/inc/dma.h inc/resources.h inc/ai_riders.h
+ /opt/toolchains/mars/m68k-elf/inc/dma.h inc/resources.h inc/ai_riders.h \
+ inc/ai_integration.h inc/ai_riders.h

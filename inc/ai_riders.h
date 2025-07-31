@@ -99,5 +99,6 @@ void handleAICollision(AIRider* rider1, AIRider* rider2);
 void assignSpriteToAI(AIRider* rider);
 void releaseSpriteFromAI(AIRider* rider);
 void updateAIAnimation(AIRider* rider);
+u8 findFreeSprite(void);
 
 #endif // _AI_RIDERS_H_

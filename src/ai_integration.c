@@ -3,14 +3,7 @@
 #include <genesis.h>
 #include "resources.h"
 #include "ai_riders.h"
-
-// Configuration du spawning des IA
-typedef struct {
-    u16 spawnDistance;      // Distance de spawn
-    AIType aiType;          // Type d'IA à spawner
-    s16 laneX;             // Position X de spawn
-    u8 probability;         // Probabilité de spawn (0-255)
-} AISpawnPoint;
+#include "ai_integration.h"
 
 // Points de spawn prédéfinis pour différents types de niveaux
 const AISpawnPoint citySpawns[] = {
@@ -45,11 +38,6 @@ static const AISpawnPoint* currentSpawns = citySpawns;
 static u16 lastSpawnCheck = 0;
 static u16 frameCounter = 0;
 static u8 difficultyLevel = 1;  // 1-5, influence le comportement IA
-u8 activeRiders = 0;         // Nombre de riders actifs
-AIRider aiRiders[MAX_AI_RIDERS];  // Array des riders IA
-s32 trackPosition = 0;       // Position sur la piste
-s16 playerX = 160;           // Position X du joueur
-s16 playerSpeed = 0;         // Vitesse du joueur
 
 // Statistiques de performance (debug)
 typedef struct {
@@ -437,24 +425,17 @@ void resetAISystem(void) {
 
 // === SAUVEGARDE/CHARGEMENT ÉTAT IA (optionnel) ===
 
-typedef struct {
-    u8 activeRiderCount;
-    u8 difficultyLevel;
-    u16 frameCounter;
-    u16 totalSpawned;
-} AISaveState;
-
 void saveAIState(AISaveState* state) {
-    state->activeRiderCount = activeRiders;
+    state->activeRiders = activeRiders;
     state->difficultyLevel = difficultyLevel;
+    state->trackPosition = trackPosition;
     state->frameCounter = frameCounter;
-    state->totalSpawned = aiStats.totalSpawned;
 }
 
 void loadAIState(const AISaveState* state) {
     difficultyLevel = state->difficultyLevel;
+    trackPosition = state->trackPosition;
     frameCounter = state->frameCounter;
-    aiStats.totalSpawned = state->totalSpawned;
     
     // Note: La restauration complète des riders nécessiterait
     // plus de données (positions, états, etc.)

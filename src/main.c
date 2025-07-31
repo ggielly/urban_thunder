@@ -5,6 +5,15 @@
 #include "ai_riders.h"
 #include "ai_integration.h"
 
+// Prototypes de fonctions
+void performPlayerAttack(void);
+void checkLevelCompletion(void);
+void updatePlayerHealth(void);
+void handleSpecialEvents(void);
+void completeLevel(void);
+void handleGameOver(void);
+void renderDebugInfo(void);
+
 // === STRUCTURES DE BASE (inchangées) ===
 
 typedef struct {
@@ -42,12 +51,13 @@ TrackSegment level1[] = {
 };
 
 // Variables joueur et jeu
-u32 trackPosition = 0;
+s32 trackPosition = 0;
 u16 currentSegmentIndex = 0;
 s16 playerX = 160;
-u16 playerSpeed = 2;
+s16 playerSpeed = 2;
 s16 cameraX = 0;
 s16 cameraY = 0;
+Sprite* player;
 u16 playerHealth = 100;
 u16 gameScore = 0;
 u8 currentLevel = 0;
@@ -347,13 +357,13 @@ void handleSpecialEvents() {
 
 void updateSprites() {
     // Sprite du joueur
-    SPR_setPosition(&player, playerX - 8, 190);
+    SPR_setPosition(player, playerX - 8, 190);
     
     // Animation du joueur selon la vitesse
     u8 playerFrame = (gameFrameCounter >> 2) % 4; // Change toutes les 4 frames
     if (playerSpeed == 0) playerFrame = 0; // Statique si arrêté
     
-    SPR_setFrame(&player, playerFrame);
+    SPR_setFrame(player, playerFrame);
 }
 
 void renderUI() {
@@ -392,7 +402,7 @@ void renderDebugInfo() {
     char debugText[32];
     
     // Informations techniques
-    sprintf(debugText, "POS:%d", trackPosition);
+    sprintf(debugText, "POS:%ld", trackPosition);
     VDP_drawText(debugText, 1, 25);
     
     sprintf(debugText, "CURVE:%d", getCurrentSegment().curve);
@@ -412,20 +422,20 @@ void renderDebugInfo() {
 int main() {
     // Initialisation SGDK
     VDP_setScreenWidth320();
-    VDP_setPlanSize(64, 32);
+    VDP_setPlaneSize(64, 32, TRUE);
     SPR_init();
     
     // Configuration des palettes
-    VDP_setPalette(PAL0, palette_road.data);
-    VDP_setPalette(PAL1, palette_sprites.data);
+    PAL_setPalette(PAL0, main_palette.data, DMA);
+    PAL_setPalette(PAL1, simple_palette.data, DMA);
     
     // Chargement des ressources
-    VDP_loadTileSet(&tileset_road.tileset, TILE_USER_INDEX, DMA);
-    VDP_loadTileSet(&tileset_grass.tileset, TILE_USER_INDEX + 8, DMA);
-    VDP_loadTileSet(&tileset_sky.tileset, TILE_USER_INDEX + 16, DMA);
+    VDP_loadTileSet(road_tiles.tileset, TILE_USER_INDEX, DMA);
+    VDP_loadTileSet(grass_tiles.tileset, TILE_USER_INDEX + 8, DMA);
+    VDP_loadTileSet(sky_tiles.tileset, TILE_USER_INDEX + 16, DMA);
     
     // Initialisation du sprite joueur
-    SPR_addSprite(&sprite_player, playerX - 8, 190, 
+    player = SPR_addSprite(&sprite_ai_bike, playerX - 8, 190, 
                   TILE_ATTR(PAL1, 0, FALSE, FALSE));
     
     // Initialisation des lookup tables
@@ -438,7 +448,7 @@ int main() {
     u16 x, y;
     for (y = 0; y < 10; y++) {
         for (x = 0; x < 40; x++) {
-            VDP_setTileMapXY(PLAN_B, 
+            VDP_setTileMapXY(BG_B, 
                 TILE_ATTR_FULL(PAL0, 0, 0, 0, TILE_USER_INDEX + 16), x, y);
         }
     }
