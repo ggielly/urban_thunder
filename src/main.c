@@ -285,7 +285,7 @@ void checkLevelCompletion() {
     }
     
     // Vérification si le joueur a terminé le niveau
-    if (trackPosition >= levelLength) {
+    if (trackPosition >= (s32)levelLength) {
         completeLevel();
     }
 }
@@ -420,29 +420,109 @@ void renderDebugInfo() {
 // === FONCTION PRINCIPALE ===
 
 int main() {
-    // Initialisation SGDK
+    // Initialisation SGDK selon documentation officielle
+    VDP_init();
     VDP_setScreenWidth320();
-    VDP_setPlaneSize(64, 32, TRUE);
+
+    /* DEBUG - SPR_init() CAUSE TOUJOURS ARTÉFACTS !
+    // Initialisation SPR AVANT tout chargement de tileset
     SPR_init();
+    // Note: SPR_setVRAMTileIndex est pour sprites individuels, pas global
+    // SGDK gère automatiquement la VRAM des sprites
+    DEBUG */
+
+    // Nettoyage des plans AVANT tout chargement (évite artéfacts)
+    VDP_clearPlane(BG_A, TRUE);
+    VDP_clearPlane(BG_B, TRUE);
+
+    // Test simple d'affichage - SEULEMENT du texte
+    VDP_drawText("THUNDER OK", 5, 5);
+    VDP_drawText("STABLE", 5, 7);
+
+    // DEBUG - Retour à la méthode qui FONCTIONNAIT avant
+    PAL_setPalette(PAL0, main_palette.data, DMA);
+    PAL_setPalette(PAL1, simple_palette.data, DMA);
+    VDP_drawText("PALETTES OK", 5, 9);
+
+    // Méthode qui FONCTIONNAIT : VDP_loadTileSet avec bons index
+    VDP_drawText("LOADING TILES...", 5, 11);
+
+    if (road_tiles.tileset) {
+        VDP_loadTileSet(road_tiles.tileset, TILE_USER_INDEX, CPU);
+        VDP_drawText("ROAD TILES OK", 5, 13);
+    }
+    if (grass_tiles.tileset) {
+        VDP_loadTileSet(grass_tiles.tileset, TILE_USER_INDEX + 32, CPU);
+        VDP_drawText("GRASS TILES OK", 5, 15);
+    }
+    if (sky_tiles.tileset) {
+        VDP_loadTileSet(sky_tiles.tileset, TILE_USER_INDEX + 64, CPU);
+        VDP_drawText("SKY TILES OK", 5, 17);
+    }
     
+    VDP_drawText("NO SPR_INIT", 5, 19);    /* DEBUG_STEP_4 - sprite_ai_bike désactivé dans resources.res
+    player = SPR_addSprite(&sprite_ai_bike, playerX - 8, 190, 
+                  TILE_ATTR(PAL1, 0, FALSE, FALSE));
+    VDP_drawText("SPRITE OK", 5, 17);
+    DEBUG_STEP_4 */
+    
+    /* DEBUG_DISABLE_SPRITES - Initialisation du sprite joueur COMMENTÉE
+    player = SPR_addSprite(&sprite_ai_bike, playerX - 8, 190, 
+                  TILE_ATTR(PAL1, 0, FALSE, FALSE));
+    DEBUG_DISABLE_SPRITES */
+    
+    /* DEBUG_DISABLE_LOOKUPS - Initialisation des lookup tables COMMENTÉE
+    initLookupTables();
+    DEBUG_DISABLE_LOOKUPS */
+    
+    /* DEBUG_DISABLE_AI - Initialisation du système IA COMMENTÉE
+    initAIForLevel(currentLevel);
+    DEBUG_DISABLE_AI */
+    
+    /* DEBUG_DISABLE_BACKGROUND - Fond de ciel statique COMMENTÉ
+    // Éviter VDP_setTileMapXY sans avoir chargé les tilesets
+    u16 x, y;
+    for (y = 0; y < 10; y++) {
+        for (x = 0; x < 40; x++) {
+            VDP_setTileMapXY(BG_B,
+                TILE_ATTR_FULL(PAL0, 0, FALSE, FALSE, 
+                    TILE_USER_INDEX + 16), x, y);
+        }
+    }
+    DEBUG_DISABLE_BACKGROUND */
+    
+    /* DEBUG_DISABLE_UI - Interface initiale COMMENTÉE
+    // Éviter trop de texte pour l'instant
+    VDP_drawText("ROAD RASH MD", 14, 1);
+    VDP_drawText("ARROWS: STEER", 13, 26);
+    VDP_drawText("A: ATTACK  C: DEBUG", 10, 27);
+    DEBUG_DISABLE_UI */
+    
+    /* DEBUG_DISABLE_ALL_RESOURCE_LOADING - Tout chargement désactivé
     // Configuration des palettes
     PAL_setPalette(PAL0, main_palette.data, DMA);
     PAL_setPalette(PAL1, simple_palette.data, DMA);
     
-    // Chargement des ressources
-    VDP_loadTileSet(road_tiles.tileset, TILE_USER_INDEX, DMA);
-    VDP_loadTileSet(grass_tiles.tileset, TILE_USER_INDEX + 8, DMA);
-    VDP_loadTileSet(sky_tiles.tileset, TILE_USER_INDEX + 16, DMA);
+    // Chargement des ressources avec vérification
+    if (road_tiles.tileset) {
+        VDP_loadTileSet(road_tiles.tileset, TILE_USER_INDEX, DMA);
+    }
+    if (grass_tiles.tileset) {
+        VDP_loadTileSet(grass_tiles.tileset, TILE_USER_INDEX + 8, DMA);
+    }
+    if (sky_tiles.tileset) {
+        VDP_loadTileSet(sky_tiles.tileset, TILE_USER_INDEX + 16, DMA);
+    }
     
     // Initialisation du sprite joueur
     player = SPR_addSprite(&sprite_ai_bike, playerX - 8, 190, 
                   TILE_ATTR(PAL1, 0, FALSE, FALSE));
     
     // Initialisation des lookup tables
-    initLookupTables();
+    // initLookupTables(); // Temporairement commenté pour debug
     
-    // Initialisation du système IA pour le niveau courant
-    initAIForLevel(currentLevel);
+    // Initialisation du système IA pour le niveau courant  
+    // initAIForLevel(currentLevel); // Temporairement commenté pour debug
     
     // Fond de ciel statique
     u16 x, y;
@@ -457,29 +537,19 @@ int main() {
     VDP_drawText("ROAD RASH MD", 14, 1);
     VDP_drawText("ARROWS: STEER", 13, 26);
     VDP_drawText("A: ATTACK  C: DEBUG", 10, 27);
+    DEBUG_DISABLE_ALL_RESOURCE_LOADING */
     
-    // Boucle principale du jeu
-    while(1) {
-        // Gestion des entrées
-        handleInput();
-        
-        // Mise à jour de la logique de jeu
-        updateGame();
-        
-        // Rendu de la route
-        clearPlanA();
-        renderRoadStripsASM(roadStrips, MAX_STRIPS);
-        
-        // Mise à jour des sprites
-        updateSprites();
-        SPR_update();
-        
-        // Interface utilisateur
-        renderUI();
-        
-        // Synchronisation VBlank
-        VDP_waitVSync();
+    // Boucle principale Genesis-friendly (SGDK >= 1.6)
+    while(TRUE)
+    {
+        /* DEBUG_DISABLE_ALL_GAME_LOGIC - Toute la logique de jeu commentée
+        ... code désactivé ...
+        DEBUG_DISABLE_ALL_GAME_LOGIC */
+
+        // Synchronisation VDP et traitement SGDK (évite artefacts)
+        SYS_doVBlankProcess();
     }
-    
-    return 0;
+
+    // Ne jamais retourner de main sur Mega Drive !
+    // return 0; // DEBUG_DISABLE_RETURN
 }

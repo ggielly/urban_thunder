@@ -436,6 +436,8 @@ void assignSpriteToAI(AIRider* rider) {
     
     // Configuration du sprite selon le type d'IA
     u16 tileAttr = TILE_ATTR(PAL1, 0, FALSE, FALSE);
+    
+    /* DEBUG_DISABLE_SPRITE_AI - sprite_ai_bike désactivé pour éviter artéfacts VRAM
     Sprite* sprite = SPR_addSprite(&sprite_ai_bike, rider->x - 8, rider->y - 8, tileAttr);
     
     if (sprite != NULL) {
@@ -444,6 +446,10 @@ void assignSpriteToAI(AIRider* rider) {
     } else {
         rider->spriteIndex = 0xFF; // Pas de sprite disponible
     }
+    DEBUG_DISABLE_SPRITE_AI */
+    
+    // Temporairement pas de sprite pour les AI (éviter erreur compilation)
+    rider->spriteIndex = 0xFF;
 }
 
 void releaseSpriteFromAI(AIRider* rider) {

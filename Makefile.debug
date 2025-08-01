@@ -1,0 +1,14 @@
+# Makefile debug - Version ultra-simplifiée sans assembleur
+# Exclut temporairement ai_physics.s et road_engine.s
+
+include $(GDK)/makefile.gen
+
+# Override des sources pour exclure l'assembleur
+SOURCES := $(filter-out src/ai_physics.s src/road_engine.s, $(SOURCES))
+
+# Debug build sans assembleur
+debug-build: resources.h resources.rs
+	@echo "=== BUILD DEBUG (sans assembleur) ==="
+	$(MAKE) -f $(GDK)/makefile.gen SOURCES="$(SOURCES)"
+
+.PHONY: debug-build
