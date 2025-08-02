@@ -87,10 +87,9 @@ grass_left_loop:
     lsl.w #1, d4                /* * 2 (mots) */
     add.w #PLAN_A_BASE, d4
     
-    /* Écriture en VRAM */
-    move.l d4, d3
-    ori.l #0x40000000, d3       /* Commande écriture VRAM */
-    move.l d3, VDP_CTRL
+    /* Configuration DMA pour l'herbe */
+    move.l #((2 << 30) | (0x8F01) | (0x9300) | (0x9400)), VDP_CTRL  /* Commande DMA + incrément 1 */
+    move.l #((0x40000000) | (PLAN_A_BASE + (d5 * 128) + (d2 * 2))), VDP_CTRL /* Adresse VRAM */
     move.w #(TILE_GRASS | PAL0_ATTR), VDP_DATA
     
     addq.w #1, a2
@@ -110,10 +109,9 @@ road_loop:
     lsl.w #1, d4                /* * 2 */
     add.w #PLAN_A_BASE, d4
     
-    /* Écriture tuile route */
-    move.l d4, d3
-    ori.l #0x40000000, d3
-    move.l d3, VDP_CTRL
+    /* Configuration DMA pour la route */
+    move.l #((2 << 30) | (0x8F01) | (0x9300) | (0x9400)), VDP_CTRL  /* Commande DMA + incrément 1 */
+    move.l #((0x40000000) | (PLAN_A_BASE + (d5 * 128) + (a2 * 2))), VDP_CTRL /* Adresse VRAM */
     move.w #(TILE_ROAD | PAL0_ATTR), VDP_DATA
     
     addq.w #1, a2
@@ -134,10 +132,9 @@ grass_right_loop:
     lsl.w #1, d4                /* * 2 */
     add.w #PLAN_A_BASE, d4
     
-    /* Écriture tuile herbe */
-    move.l d4, d3
-    ori.l #0x40000000, d3
-    move.l d3, VDP_CTRL
+    /* Configuration DMA pour l'herbe */
+    move.l #((2 << 30) | (0x8F01) | (0x9300) | (0x9400)), VDP_CTRL  /* Commande DMA + incrément 1 */
+    move.l #((0x40000000) | (PLAN_A_BASE + (d5 * 128) + (a2 * 2))), VDP_CTRL /* Adresse VRAM */
     move.w #(TILE_GRASS | PAL0_ATTR), VDP_DATA
     
     addq.w #1, a2

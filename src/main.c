@@ -75,6 +75,14 @@ u16 widthTable[224];
 extern void renderRoadStripsASM(RoadStrip* strips, u16 numStrips);
 extern void clearPlanA(void);
 
+void enable128kMode() {
+    VDP_setReg(1, VDP_getReg(1) | 0x80);
+}
+
+void disable128kMode() {
+    VDP_setReg(1, VDP_getReg(1) & ~0x80);
+}
+
 // === FONCTIONS DE BASE (inchangées mais optimisées) ===
 
 void initLookupTables() {
@@ -548,6 +556,10 @@ int main() {
 
         // Synchronisation VDP et traitement SGDK (évite artefacts)
         SYS_doVBlankProcess();
+
+        enable128kMode();
+        renderRoadStripsASM(roadStrips, MAX_STRIPS);
+        disable128kMode();
     }
 
     // Ne jamais retourner de main sur Mega Drive !
